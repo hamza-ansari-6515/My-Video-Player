@@ -1,15 +1,22 @@
+# Gradle
+.gradle/
+build/
+*.apk
+*.aab
+*.dex
+
+# Android Studio
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+*.log
+
+# Build outputs
+app/build/
+app/release/
+
+# Local properties
 local.properties
+
+# OS
+.DS_Store
+Thumbs.db
