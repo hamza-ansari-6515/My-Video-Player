@@ -1,6 +1,6 @@
-==========================================
-📱 My Video Player – Free & Fully Offline
-==========================================
+                  ==========================================
+                  📱 My Video Player – Free & Fully Offline
+                  ==========================================
 
 Experience seamless video playback with My Video Player, a powerful, completely free, and 100% offline video streaming app built on the robust VLC Engine. 
 
@@ -24,7 +24,7 @@ Protect your personal videos like never before! Our app allows you to encrypt an
 
 I have a pipeline of innovative projects lined up. If you like this application and want to see more unique tools, consider supporting my work! Feel free to reach out if you'd like to collaborate or check out my other projects.
 
-* Instagram (DM for inquiries/projects): @_hamxa_.69
-* Support / Donations (UPI): gulnazmansari-1@okaxis
+* Instagram (DM for inquiries/projects):          @_hamxa_.69
+* Support / Donations (UPI):                      gulnazmansari-1@okaxis
 
-===================================
+================================================================================
