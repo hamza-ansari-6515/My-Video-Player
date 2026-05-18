@@ -27,4 +27,20 @@ I have a pipeline of innovative projects lined up. If you like this application 
 * Instagram (DM for inquiries/projects):          @_hamxa_.69
 * Support / Donations (UPI):                      gulnazmansari-1@okaxis
 
-================================================================================
+### 🔥 Key Features
+
+* **🚀 10-Bit HEVC Mastery**: Smoothly plays 10-bit HEVC (H.265) videos with 1 billion colors. No more color banding or washed-out frames.
+* **🎥 Desktop-Grade Engine**: Powered by the complete **libVLC**, ensuring support for every format (MKV, MP4, AVI, MOV, TS, etc.).
+* **⚡ Hardware Acceleration**: Uses your phone's GPU to decode high-bitrate 1080p and 4K footage without lag or overheating.
+* **🔐 Military-Grade Encryption**: Lock sensitive videos with a **Custom Cryptographic Signature**. Encrypted videos will *only* play inside this app.
+* **🚫 100% Private & Offline**: Zero tracking. No internet permissions. Your data stays on your device, always.
+* **✨ Zero Bloatware**: No ads, no annoying recommendations—just a clean, premium interface.
+
+### 📦 Why 200 MB?
+The app includes the **full VLC codec library** (libVLC) to ensure desktop-class performance. This means you never have to worry about "Format Not Supported" errors again.
+
+### 🛠 Tech Stack
+* **Language**: 100% Kotlin
+* **Core**: VLC Media Engine (Native Libs)
+* **Security**: Custom Cryptographic Signature
+==============================================================================
