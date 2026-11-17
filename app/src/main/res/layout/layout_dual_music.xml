@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0A0A0A"
+    android:padding="8dp">
+
+    <!-- Top Action Bar with Down Arrow for Track Picker -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="8dp"
+        android:background="#161616"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Dual Audio Studio"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/btn_music_picker_down"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="6dp"
+            android:src="@android:drawable/ic_menu_sort_by_size"
+            app:tint="#FF5252"
+            android:contentDescription="Select Tracks" />
+    </LinearLayout>
+
+    <!-- Both Merge Toggle Card with Premium Styling & Animation Effect -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="4dp"
+        android:layout_marginBottom="8dp"
+        app:cardBackgroundColor="#1A1A1A"
+        app:cardCornerRadius="14dp"
+        app:cardElevation="6dp"
+        app:strokeColor="#26FFFFFF"
+        app:strokeWidth="1dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="14dp">
+
+            <ImageView
+                android:id="@+id/iv_merge_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_centerVertical="true"
+                android:src="@drawable/ic_audio"
+                app:tint="#FF5252" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/iv_merge_icon"
+                android:layout_toStartOf="@+id/switch_merge"
+                android:layout_marginStart="14dp"
+                android:layout_centerVertical="true"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Merge Audio Output"
+                    android:textColor="#FFFFFF"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sync both channels with smooth crossfade"
+                    android:textColor="#888888"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/switch_merge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                app:thumbTint="#FF5252"
+                app:trackTint="#444444" />
+
+        </RelativeLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Dual Player Container -->
+    <LinearLayout
+        android:id="@+id/layout_dual_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <!-- Left Player Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/player_left"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="4dp"
+            android:layout_marginBottom="4dp"
+            app:cardBackgroundColor="#141414"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeColor="#22FFFFFF"
+            app:strokeWidth="1dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="14dp">
+
+                <TextView
+                    android:id="@+id/tv_label_left"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="● LEFT CHANNEL"
+                    android:textColor="#FF5252"
+                    android:textStyle="bold"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/tv_title_left"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/tv_label_left"
+                    android:layout_marginTop="6dp"
+                    android:text="Select track for Left earbud"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:orientation="vertical">
+
+                    <SeekBar
+                        android:id="@+id/sb_left"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:progressTint="#FF5252"
+                        android:thumbTint="#FF5252" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="2dp">
+
+                        <ImageButton
+                            android:id="@+id/btn_select_left"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_audio"
+                            app:tint="#CCCCCC" />
+
+                        <ImageButton
+                            android:id="@+id/btn_prev_left"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="12dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_skip_previous"
+                            app:tint="#FFFFFF" />
+
+                        <ImageButton
+                            android:id="@+id/btn_play_left"
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:layout_marginHorizontal="16dp"
+                            android:background="@drawable/bg_circle_ripple"
+                            android:src="@drawable/ic_play_arrow"
+                            app:tint="#FFFFFF"
+                            android:scaleType="centerInside"
+                            android:padding="10dp"/>
+
+                        <ImageButton
+                            android:id="@+id/btn_next_left"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_skip_next"
+                            app:tint="#FFFFFF" />
+
+                    </LinearLayout>
+                </LinearLayout>
+            </RelativeLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Right Player Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/player_right"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginHorizontal="4dp"
+            android:layout_marginTop="4dp"
+            app:cardBackgroundColor="#141414"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeColor="#22FFFFFF"
+            app:strokeWidth="1dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="14dp">
+
+                <TextView
+                    android:id="@+id/tv_label_right"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="● RIGHT CHANNEL"
+                    android:textColor="#FF4081"
+                    android:textStyle="bold"
+                    android:textSize="11sp"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/tv_title_right"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/tv_label_right"
+                    android:layout_marginTop="6dp"
+                    android:text="Select track for Right earbud"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:orientation="vertical">
+
+                    <SeekBar
+                        android:id="@+id/sb_right"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:progressTint="#FF4081"
+                        android:thumbTint="#FF4081" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="2dp">
+
+                        <ImageButton
+                            android:id="@+id/btn_select_right"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_audio"
+                            app:tint="#CCCCCC" />
+
+                        <ImageButton
+                            android:id="@+id/btn_prev_right"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_marginStart="12dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_skip_previous"
+                            app:tint="#FFFFFF" />
+
+                        <ImageButton
+                            android:id="@+id/btn_play_right"
+                            android:layout_width="52dp"
+                            android:layout_height="52dp"
+                            android:layout_marginHorizontal="16dp"
+                            android:background="@drawable/bg_circle_ripple"
+                            android:src="@drawable/ic_play_arrow"
+                            app:tint="#FFFFFF"
+                            android:scaleType="centerInside"
+                            android:padding="10dp"/>
+
+                        <ImageButton
+                            android:id="@+id/btn_next_right"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_skip_next"
+                            app:tint="#FFFFFF" />
+
+                    </LinearLayout>
+                </LinearLayout>
+            </RelativeLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+
+    <!-- Merged Player Container -->
+    <LinearLayout
+        android:id="@+id/layout_merged_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginHorizontal="4dp"
+            android:layout_marginBottom="4dp"
+            app:cardBackgroundColor="#141414"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeColor="#22FFFFFF"
+            app:strokeWidth="1dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/tv_label_merged"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="● MERGED DUAL OUTPUT"
+                    android:textColor="#FF5252"
+                    android:textStyle="bold"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.05" />
+
+                <TextView
+                    android:id="@+id/tv_title_merged"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/tv_label_merged"
+                    android:layout_marginTop="12dp"
+                    android:text="Select track for Merged Output"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:orientation="vertical"
+                    android:paddingBottom="24dp">
+
+                    <SeekBar
+                        android:id="@+id/sb_merged"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:progressTint="#FF5252"
+                        android:thumbTint="#FF5252" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="16dp">
+
+                        <ImageButton
+                            android:id="@+id/btn_select_merged"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_audio"
+                            app:tint="#CCCCCC" />
+
+                        <ImageButton
+                            android:id="@+id/btn_prev_merged"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_marginStart="16dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_skip_previous"
+                            app:tint="#FFFFFF" />
+
+                        <ImageButton
+                            android:id="@+id/btn_play_merged"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:layout_marginHorizontal="24dp"
+                            android:background="@drawable/bg_circle_ripple"
+                            android:src="@drawable/ic_play_arrow"
+                            app:tint="#FFFFFF"
+                            android:scaleType="centerInside"
+                            android:padding="14dp"/>
+
+                        <ImageButton
+                            android:id="@+id/btn_next_merged"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_marginEnd="16dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_skip_next"
+                            app:tint="#FFFFFF" />
+
+                    </LinearLayout>
+                </LinearLayout>
+            </RelativeLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+
+</LinearLayout>

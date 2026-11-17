@@ -50,12 +50,83 @@
             </RelativeLayout>
         </androidx.appcompat.widget.Toolbar>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/folderRecyclerView"
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tab_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="8dp"
-            android:clipToPadding="false" />
+            android:layout_height="wrap_content"
+            android:background="@color/surface_dark"
+            app:tabTextColor="@color/text_secondary"
+            app:tabSelectedTextColor="@color/white"
+            app:tabIndicatorColor="@color/primary"
+            app:tabIndicatorHeight="3dp">
+
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Video" />
+
+            <com.google.android.material.tabs.TabItem
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Music" />
+        </com.google.android.material.tabs.TabLayout>
+
+        <LinearLayout
+            android:id="@+id/searchContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:background="@color/surface_dark"
+            android:gravity="center_vertical">
+
+            <EditText
+                android:id="@+id/etSearch"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_search_input"
+                android:hint="Search folders or videos..."
+                android:textColorHint="@color/text_secondary"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:paddingHorizontal="12dp"
+                android:drawableStart="@android:drawable/ic_menu_search"
+                android:drawablePadding="8dp"
+                android:drawableTint="@color/text_secondary"
+                android:singleLine="true"
+                android:imeOptions="actionSearch" />
+
+            <ImageView
+                android:id="@+id/btnClearSearch"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="8dp"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                app:tint="@color/text_secondary"
+                android:visibility="gone"
+                android:background="?attr/selectableItemBackgroundBorderless" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/folderRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="8dp"
+                android:clipToPadding="false"
+                android:visibility="visible" />
+
+            <include
+                android:id="@+id/layout_music"
+                layout="@layout/layout_dual_music"
+                android:visibility="gone" />
+
+        </FrameLayout>
 
     </LinearLayout>
 

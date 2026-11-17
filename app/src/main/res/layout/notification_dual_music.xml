@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="#1E1E1E">
+
+    <!-- Left Player Info -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/noti_title_left"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Left Earbud"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@+id/noti_controls_left"
+                android:layout_centerVertical="true"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:layout_marginEnd="8dp" />
+
+            <LinearLayout
+                android:id="@+id/noti_controls_left"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:id="@+id/noti_btn_prev_left"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_skip_previous"
+                    android:contentDescription="Prev Left" />
+
+                <ImageView
+                    android:id="@+id/noti_btn_play_left"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_play_arrow"
+                    android:contentDescription="Play Left" />
+
+                <ImageView
+                    android:id="@+id/noti_btn_next_left"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_skip_next"
+                    android:contentDescription="Next Left" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <ProgressBar
+            android:id="@+id/noti_progress_left"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginTop="4dp"
+            android:progressTint="#2196F3" />
+
+        <TextView
+            android:id="@+id/noti_time_left"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="00:00 / 00:00"
+            android:textColor="#BBFFFFFF"
+            android:textSize="10sp"
+            android:layout_marginTop="2dp" />
+    </LinearLayout>
+
+    <!-- Separator -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#33FFFFFF"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp" />
+
+    <!-- Right Player Info -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/noti_title_right"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Right Earbud"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@+id/noti_controls_right"
+                android:layout_centerVertical="true"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:layout_marginEnd="8dp" />
+
+            <LinearLayout
+                android:id="@+id/noti_controls_right"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:id="@+id/noti_btn_prev_right"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_skip_previous"
+                    android:contentDescription="Prev Right" />
+
+                <ImageView
+                    android:id="@+id/noti_btn_play_right"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_play_arrow"
+                    android:contentDescription="Play Right" />
+
+                <ImageView
+                    android:id="@+id/noti_btn_next_right"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_skip_next"
+                    android:contentDescription="Next Right" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <ProgressBar
+            android:id="@+id/noti_progress_right"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginTop="4dp"
+            android:progressTint="#FF4081" />
+
+        <TextView
+            android:id="@+id/noti_time_right"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="00:00 / 00:00"
+            android:textColor="#BBFFFFFF"
+            android:textSize="10sp"
+            android:layout_marginTop="2dp" />
+    </LinearLayout>
+
+</LinearLayout>
