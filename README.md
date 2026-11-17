@@ -1,54 +1,56 @@
-[Direct Download APK](https://drive.google.com/file/d/19owwGbVenxS_g7VE9DvyR5iHu6vDbUdO/view?usp=drivesdk)
-                  ==========================================
-                  📱 My Video Player – Free & Fully Offline 
-                               Android Project 
-                  ==========================================
-                  
-New Version Available🔥, Bug fixes👾, New effect and Animations Added👍
+# 📱 My Video Player
+**One App. Unlimited Entertainment.**
 
-Experience seamless video playback with My Video Player, a powerful, completely free, and 100% offline video streaming app built on the robust VLC Engine. 
+Experience a powerful all-in-one video and music player powered by the VLC Engine. Enjoy smooth playback, advanced audio controls, unique video tools, and a clean modern interface — completely free and offline.
 
+🔥 **New Version Available!**
+Bug fixes, new effects, smoother animations and performance improvements.
 
-While I am currently working on a fix for a minor subtitle rendering bug, the app comes packed with advanced functionalities—including a unique, cutting-edge security feature for your private media files.
+## ✨ Video Player Features
+- 🎥 All-Format Support – MKV, MP4, AVI, MOV , HEVC(10-bit), H.265 and H.264 and more.
+- 🌈 10-Bit HEVC Playback – Enjoy stunning colours and quality.
+- ⚡ Hardware Acceleration – Smooth 1080p and 4K playback.
+- 👻 Ghost Video – Convert video duration display to `00:00`.
+- 📱 Background Video Playback – Keep videos playing while using other apps.
+- 🏝️ Hyper Island Support – Convenient playback controls and media information.
+- 🔄 Advanced Playback Controls – Enjoy a seamless viewing experience.
 
----------------------------------------
-🔒 Next-Gen Video Encryption & Privacy
+## 🎵 Advanced Music Player
+- 🎧 Built-in Music Player – Play your favourite songs.
+- 🎚️ Dual Music Player – Play two different songs simultaneously, with separate Left and Right audio channels.
+- 🔊 Background Music – Keep music playing even when the app is minimized.
+- 🎨 Clean Music Interface – Simple and modern music experience.
 
----------------------------------------
+## 🔐 Advanced Security
+- AES Video Encryption – Protect your private videos.
+- Custom Cryptographic Signature – Encrypted videos require a matching signature.
+- Dedicated Decryptor App – Planned support for decrypting compatible videos.
 
+## 🎨 Modern Experience
+- Clean & Minimal UI
+- Smooth Animations & Effects
+- Ad-Free Experience
+- No Tracking
+- 100% Offline – No Internet Required
 
-Protect your personal videos like never before! Our app allows you to encrypt any video file using a unique, secure signature with AES Cryptography Encrryption .
+## 🛠 Technology
+- **Language:** Kotlin
+- **Engine:** VLC / libVLC
+- **Security:** AES Cryptography
+- **Platform:** Android
 
+## 📦 App Information
+**Size:** Approximately 200 MB (Includes native VLC libraries).
 
-* How it works: The encrypted video is tightly bound to a specific signature. If there is a signature mismatch, the video simply will not play and will throw an error.
+## ❤️ Support the Developer
+Your support helps bring more innovative projects to life.
 
-* The Solution: I will also be releasing a dedicated Decryptor App capable of decoding and playing videos matching your specific cryptographic signature.
+**UPI:** hmansari92@okicici
 
--------------------------
+For feedback, collaboration or suggestions, feel free to get in touch!
 
-🚀 Support the Developer
+---
 
--------------------------
+## ⬇️ Download Latest APK
 
-I have a pipeline of innovative projects lined up. If you like this application and want to see more unique tools, consider supporting my work! Feel free to reach out if you'd like to collaborate or check out my other projects.
-
-* Support / Donations (UPI):                      gulnazmansari-1@okaxis
-
-
-### 🔥 Key Features
-
-* **🚀 10-Bit HEVC Mastery**: Smoothly plays 10-bit HEVC (H.265) videos with 1 billion colors. No more color banding or washed-out frames.
-* **🎥 Desktop-Grade Engine**: Powered by the complete **libVLC**, ensuring support for every format (MKV, MP4, AVI, MOV, TS, etc.).
-* **⚡ Hardware Acceleration**: Uses your phone's GPU to decode high-bitrate 1080p and 4K footage without lag or overheating.
-* **🔐 Military-Grade Encryption**: Lock sensitive videos with a **Custom Cryptographic Signature**. Encrypted videos will *only* play inside this app.
-* **🚫 100% Private & Offline**: Zero tracking. No internet permissions. Your data stays on your device, always.
-* **✨ Zero Bloatware**: No ads, no annoying recommendations—just a clean, premium interface.
-
-### 📦 Why 200 MB?
-The app includes the **full VLC codec library** (libVLC) to ensure desktop-class performance. This means you never have to worry about "Format Not Supported" errors again.
-
-### 🛠 Tech Stack
-* **Language**: 100% Kotlin
-* **Core**: VLC Media Engine (Native Libs)
-* **Security**: Custom Cryptographic Signature
-==============================================================================
+[📥 Instant Download APK](https://drive.google.com/file/d/1A6vTizJg-vT2yqL0LOb_reB3jLCgHT0p/view?usp=sharing)
