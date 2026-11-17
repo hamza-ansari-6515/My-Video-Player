@@ -53,4 +53,4 @@ For feedback, collaboration or suggestions, feel free to get in touch!
 
 ## ⬇️ Download Latest APK
 
-[📥 Instant Download APK](https://drive.google.com/file/d/1A6vTizJg-vT2yqL0LOb_reB3jLCgHT0p/view?usp=sharing)
+[📥 Instant Download APK](https://drive.google.com/file/d/1GA7EEpeia_XPW8-CcReJBElNTO79uq4b/view?usp=drivesdk)
