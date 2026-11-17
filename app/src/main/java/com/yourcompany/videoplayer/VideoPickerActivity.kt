@@ -41,10 +41,15 @@ class VideoPickerActivity : AppCompatActivity() {
     private var currentPath: String? = "STORAGE_ROOT"
     private val rootPath = "STORAGE_ROOT"
     private var convertMenuItem: MenuItem? = null
+    private var isAudioMode = false
+    private var isGhostRequest = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_picker)
+
+        isAudioMode = intent.getBooleanExtra("IS_AUDIO", false)
+        isGhostRequest = intent.getBooleanExtra("IS_GHOST_REQUEST", false)
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar_picker)
         setSupportActionBar(toolbar)
@@ -62,10 +67,19 @@ class VideoPickerActivity : AppCompatActivity() {
     private fun loadContent() {
         val repo = VideoRepository(this)
         val stdCurrentPath = standardizePath(currentPath ?: rootPath)
-        val allVideos = if (stdCurrentPath == rootPath) repo.getVideosFromFolder("") else repo.getVideosFromFolder(stdCurrentPath)
+        
+        val allFiles = ArrayList<VideoFile>()
+        if (isGhostRequest) {
+            allFiles.addAll(repo.getVideosFromFolder(if (stdCurrentPath == rootPath) "" else stdCurrentPath))
+            allFiles.addAll(getAudioFiles(stdCurrentPath))
+        } else if (isAudioMode) {
+            allFiles.addAll(getAudioFiles(stdCurrentPath))
+        } else {
+            allFiles.addAll(repo.getVideosFromFolder(if (stdCurrentPath == rootPath) "" else stdCurrentPath))
+        }
 
         val foldersInCurrentDir = ArrayList<FolderModel>()
-        val videosInCurrentDir = ArrayList<VideoFile>()
+        val filesInCurrentDir = ArrayList<VideoFile>()
         val processedSubFolders = mutableSetOf<String>()
 
         if (stdCurrentPath == "STORAGE_ROOT") {
@@ -77,47 +91,98 @@ class VideoPickerActivity : AppCompatActivity() {
                     if (stdVolPath.contains("self") || stdVolPath.contains("knox") || stdVolPath == "/storage/emulated") continue
                     
                     val name = if (volume.isPrimary) "Internal Storage" else volume.getDescription(this) ?: "SD Card"
-                    val count = allVideos.count { standardizePath(it.path).startsWith(stdVolPath) }
+                    val count = allFiles.count { standardizePath(it.path).startsWith(stdVolPath) }
                     foldersInCurrentDir.add(FolderModel(name, stdVolPath, count.toString(), ""))
                 }
             }
         } else {
-            for (video in allVideos) {
-                val relPath = getRelativePath(video.path, stdCurrentPath)
+            for (file in allFiles) {
+                val relPath = getRelativePath(file.path, stdCurrentPath)
                 if (relPath != null && relPath.isNotEmpty()) {
                     val parts = relPath.split('/')
                     if (parts.size > 1) {
                         val subFolderName = parts[0]
                         val subFolderPath = stdCurrentPath + "/" + subFolderName
                         if (!processedSubFolders.contains(subFolderName.lowercase())) {
-                            val count = allVideos.count { getRelativePath(it.path, subFolderPath) != null }
-                            foldersInCurrentDir.add(FolderModel(subFolderName, subFolderPath, count.toString(), video.path))
+                            val count = allFiles.count { getRelativePath(it.path, subFolderPath) != null }
+                            foldersInCurrentDir.add(FolderModel(subFolderName, subFolderPath, count.toString(), file.path))
                             processedSubFolders.add(subFolderName.lowercase())
                         }
                     } else if (parts.size == 1) {
-                        videosInCurrentDir.add(video)
+                        filesInCurrentDir.add(file)
                     }
                 }
             }
         }
 
         foldersInCurrentDir.sortBy { it.folderName.lowercase() }
-        videosInCurrentDir.sortBy { it.title.lowercase() }
+        filesInCurrentDir.sortBy { it.title.lowercase() }
 
         itemList.clear()
         itemList.addAll(foldersInCurrentDir)
-        itemList.addAll(videosInCurrentDir)
+        itemList.addAll(filesInCurrentDir)
 
-        adapter = PickerUnifiedAdapter(this, itemList, selectedPaths) { item ->
+        adapter = PickerUnifiedAdapter(this, itemList, selectedPaths, isAudioMode || isGhostRequest) { item ->
             if (item is FolderModel) {
                 currentPath = item.path
+                selectedPaths.clear() // Bug Fix: Clear selection when entering a new folder
                 loadContent()
             } else if (item is VideoFile) {
-                toggleSelection(item.path)
+                if (isAudioMode && !isGhostRequest) {
+                    // Bug Fix: Single select for music mode (Dual Player)
+                    val intent = Intent()
+                    intent.putStringArrayListExtra("PATHS", arrayListOf(item.path))
+                    setResult(Activity.RESULT_OK, intent)
+                    finish()
+                } else {
+                    // Multi-select for Video Converter or Ghost Mode
+                    toggleSelection(item.path)
+                }
             }
         }
         recyclerView.adapter = adapter
         updateUI()
+    }
+
+    private fun getAudioFiles(folderPath: String): ArrayList<VideoFile> {
+        val list = ArrayList<VideoFile>()
+        val projection = arrayOf(
+            MediaStore.Audio.Media._ID,
+            MediaStore.Audio.Media.DATA,
+            MediaStore.Audio.Media.DISPLAY_NAME,
+            MediaStore.Audio.Media.SIZE,
+            MediaStore.Audio.Media.DURATION
+        )
+        
+        val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        try {
+            contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                val dataIdx = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+                val idIdx = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
+                val nameIdx = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
+                val sizeIdx = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
+                val durationIdx = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
+
+                while (cursor.moveToNext()) {
+                    val path = cursor.getString(dataIdx) ?: continue
+                    val stdPath = standardizePath(path)
+                    
+                    if (folderPath != "STORAGE_ROOT") {
+                        if (!stdPath.lowercase().startsWith(folderPath.lowercase() + "/")) continue
+                    }
+
+                    list.add(VideoFile(
+                        id = cursor.getLong(idIdx),
+                        path = stdPath,
+                        title = cursor.getString(nameIdx) ?: File(path).name,
+                        folderName = File(path).parentFile?.name ?: "Unknown",
+                        size = cursor.getLong(sizeIdx).let { if (it > 0) it else File(path).length() },
+                        duration = cursor.getLong(durationIdx)
+                    ))
+                }
+            }
+        } catch (e: Exception) {}
+        return list
     }
 
     private fun toggleSelection(path: String) {
@@ -132,8 +197,18 @@ class VideoPickerActivity : AppCompatActivity() {
 
     private fun updateUI() {
         val count = selectedPaths.size
-        supportActionBar?.title = if (count > 0) "$count Selected" else "Select Video"
-        convertMenuItem?.isVisible = count > 0
+        supportActionBar?.title = when {
+            isGhostRequest -> if (count > 0) "$count Selected (Ghost)" else "Select Media to Ghost"
+            isAudioMode -> "Select Music"
+            else -> if (count > 0) "$count Selected" else "Select Video"
+        }
+
+        convertMenuItem?.isVisible = (isGhostRequest && count > 0) || (!isAudioMode && count > 0)
+
+        if (isGhostRequest) {
+             convertMenuItem?.setIcon(R.drawable.ic_edit)
+             convertMenuItem?.title = "Ghost"
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -163,6 +238,7 @@ class VideoPickerActivity : AppCompatActivity() {
             } else {
                 currentPath = rootPath
             }
+            selectedPaths.clear() // Bug Fix: Clear selection when going back to parent folder
             loadContent()
         } else {
             super.onBackPressed()
@@ -194,6 +270,7 @@ class VideoPickerActivity : AppCompatActivity() {
         private val context: Context,
         private val items: List<Any>,
         private val selectedPaths: HashSet<String>,
+        private val isMixedMode: Boolean,
         private val onItemClick: (Any) -> Unit
     ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -231,34 +308,45 @@ class VideoPickerActivity : AppCompatActivity() {
                 holder.card.strokeColor = if (isSelected) Color.parseColor("#2196F3") else Color.parseColor("#1AFFFFFF")
                 holder.card.strokeWidth = if (isSelected) 4 else 1
 
-                // 🔥 Async Thumbnail Loading with Context for Dynamic Signature
-                holder.thumbJob?.cancel()
-                holder.thumbJob = adapterScope.launch {
-                    val isEncrypted = encryptionCache[item.path] ?: withContext(Dispatchers.IO) {
-                        VideoFile.isFileEncrypted(context, item.path)
-                    }
-                    encryptionCache[item.path] = isEncrypted
+                val isAudio = item.path.endsWith(".mp3", true) || item.path.endsWith(".m4a", true) ||
+                              item.path.endsWith(".wav", true) || item.path.endsWith(".aac", true) ||
+                              item.path.endsWith(".flac", true) || item.path.endsWith(".ogg", true) ||
+                              item.path.endsWith(".wma", true) || item.path.endsWith(".amr", true)
 
-                    val thumbUri: Uri = if (isEncrypted) {
-                        Uri.parse("content://com.yourcompany.videoplayer.decryption${item.path}")
-                    } else {
-                        ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, item.id)
-                    }
+                if (isAudio) {
+                    holder.thumbnail.setImageResource(R.drawable.ic_audio)
+                    holder.thumbnail.scaleType = ImageView.ScaleType.CENTER_INSIDE
+                    holder.thumbnail.setPadding(30, 30, 30, 30)
+                } else {
+                    holder.thumbnail.scaleType = ImageView.ScaleType.CENTER_CROP
+                    holder.thumbnail.setPadding(0, 0, 0, 0)
+                    holder.thumbJob?.cancel()
+                    holder.thumbJob = adapterScope.launch {
+                        val isEncrypted = encryptionCache[item.path] ?: withContext(Dispatchers.IO) {
+                            VideoFile.isFileEncrypted(context, item.path)
+                        }
+                        encryptionCache[item.path] = isEncrypted
 
-                    // Fix: Use holder.itemView.context or holder.thumbnail to avoid crash on destroyed activity
-                    Glide.with(holder.itemView)
-                        .asBitmap()
-                        .load(thumbUri)
-                        .signature(ObjectKey("${item.path}_${currentSig}_$isEncrypted"))
-                        .apply(
-                            RequestOptions()
-                                .placeholder(R.drawable.ic_video)
-                                .error(R.drawable.ic_video)
-                                .centerCrop()
-                                .diskCacheStrategy(DiskCacheStrategy.ALL)
-                                .override(250, 250)
-                        )
-                        .into(holder.thumbnail)
+                        val thumbUri: Uri = if (isEncrypted) {
+                            Uri.parse("content://com.yourcompany.videoplayer.decryption${item.path}")
+                        } else {
+                            ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, item.id)
+                        }
+
+                        Glide.with(holder.itemView)
+                            .asBitmap()
+                            .load(thumbUri)
+                            .signature(ObjectKey("${item.path}_${currentSig}_$isEncrypted"))
+                            .apply(
+                                RequestOptions()
+                                    .placeholder(R.drawable.ic_video)
+                                    .error(R.drawable.ic_video)
+                                    .centerCrop()
+                                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                    .override(250, 250)
+                            )
+                            .into(holder.thumbnail)
+                    }
                 }
                 
                 holder.itemView.setOnClickListener { onItemClick(item) }

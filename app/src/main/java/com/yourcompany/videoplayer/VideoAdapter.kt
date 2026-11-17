@@ -56,13 +56,17 @@ class VideoAdapter(
 
         val sharedPrefs = context.getSharedPreferences("RESUME_INFO", Context.MODE_PRIVATE)
         val durPrefs = context.getSharedPreferences("SECURE_DUR", Context.MODE_PRIVATE)
-        val resumePos = sharedPrefs.getLong(video.path, 0L)
-        val secureDur = durPrefs.getLong(video.path, 0L)
-        val duration = if (secureDur > 0) secureDur else video.duration
         
-        if (resumePos > 1000 && duration > 0) {
+        val resumePos = sharedPrefs.getLong(video.path, 0L)
+        
+        // Ghost mode files will have 0L in video.duration (from Repository)
+        // but durPrefs will have the original duration for progress bar
+        val secureDur = durPrefs.getLong(video.path, 0L)
+        val effectiveDuration = if (secureDur > 0) secureDur else video.duration
+        
+        if (resumePos > 1000 && effectiveDuration > 0) {
             holder.progress.visibility = View.VISIBLE
-            holder.progress.max = duration.toInt()
+            holder.progress.max = effectiveDuration.toInt()
             holder.progress.progress = resumePos.toInt()
         } else {
             holder.progress.visibility = View.GONE
@@ -79,6 +83,7 @@ class VideoAdapter(
             holder.title.text = video.displayTitle
         }
 
+        // Will show 00:00 if video.duration is 0 (set by Repository for Ghost files)
         holder.duration.text = video.formattedDuration
         holder.size.text = video.formattedSize
 
@@ -89,9 +94,6 @@ class VideoAdapter(
         holder.thumbJob = adapterScope.launch {
             val isEncrypted = withContext(Dispatchers.IO) { VideoFile.isFileEncrypted(context, video.path) }
             
-            // 🔥 Fix for HEVC 10-bit Thumbnails:
-            // Use MediaStore URI for normal videos so Glide can fetch the system-cached thumbnail.
-            // File path often fails for HEVC 10-bit on many devices.
             val thumbSource: Any = if (isEncrypted) {
                 Uri.parse("content://com.yourcompany.videoplayer.decryption${video.path}")
             } else {
@@ -107,8 +109,10 @@ class VideoAdapter(
                         .placeholder(R.drawable.ic_video)
                         .error(R.drawable.ic_video)
                         .centerCrop()
-                        .diskCacheStrategy(DiskCacheStrategy.ALL)
-                        .override(300, 300)
+                        .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                        .skipMemoryCache(false)
+                        .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                        .override(200, 200)
                 )
                 .into(holder.thumbnail)
         }

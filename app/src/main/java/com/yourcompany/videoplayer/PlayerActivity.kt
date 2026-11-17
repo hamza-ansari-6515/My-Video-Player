@@ -89,11 +89,11 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var controlsBgOverlay: View
     private lateinit var rewOverlay: View
     private lateinit var ffwdOverlay: View
-    
+
     private lateinit var previewFrameContainer: View
     private lateinit var ivPreviewFrame: ImageView
     private lateinit var tvPreviewTime: TextView
-    
+
     private lateinit var speedSelectionCard: View
     private lateinit var speedIndicatorLeft: ImageView
     private lateinit var speedIndicatorRight: ImageView
@@ -102,7 +102,7 @@ class PlayerActivity : AppCompatActivity() {
     private var longPressStartY = 0f
     private var currentSpeedIndex = 3 // Default 2.0x
     private var isCardOnRight = true
-    
+
     private var suggestedAdapter: SuggestedVideoAdapter? = null
     private val hideHandler = Handler(Looper.getMainLooper())
     private val hideRunnable = Runnable { hideControls() }
@@ -115,7 +115,7 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var gestureDetector: GestureDetector
 
     private var isUserSeeking = false
-    private var activeGesture = 0 
+    private var activeGesture = 0
     private var isListExpanded = false
     private var firstTapX = 0f
     private var lastTapTime = 0L
@@ -129,10 +129,11 @@ class PlayerActivity : AppCompatActivity() {
                     vlcMediaPlayer?.let {
                         if (it.isPlaying) {
                             val currentPos = it.time
-                            val duration = it.length
-                            seekBar.progress = currentPos.toInt()
+                            val duration = if (fakeDuration > 0) fakeDuration else it.length
+                            seekBar.max = duration.toInt()
                             tvCurrentTime.text = formatTime(currentPos)
                             if (duration > 0) tvTotalDuration.text = formatTime(duration)
+                            seekBar.progress = currentPos.toInt()
                             saveResumePosition(currentPos)
                         }
                     }
@@ -164,7 +165,7 @@ class PlayerActivity : AppCompatActivity() {
     private var initialSeekPos = 0L
     private var gestureStartX = 0f
     private var gestureCooldown = false
-    
+
     private var frameRetriever: MediaMetadataRetriever? = null
     private var previewJob: Job? = null
     private var retrieverInitJob: Job? = null
@@ -194,6 +195,35 @@ class PlayerActivity : AppCompatActivity() {
         } catch (e: Exception) { e.printStackTrace() }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Re-evaluate state when returning from SettingsActivity or elsewhere
+        val prefs = getSharedPreferences("SETTINGS", Context.MODE_PRIVATE)
+        val hamzasMode = prefs.getBoolean("ALWAYS_VLC", false)
+        if (videoList.isNotEmpty() && position < videoList.size) {
+            val path = videoList[position].path
+            lifecycleScope.launch {
+                val status = withContext(Dispatchers.IO) { VideoFile.checkSecurityStatus(this@PlayerActivity, path) }
+                withContext(Dispatchers.Main) {
+                    if (status.isSecured) {
+                        if (status.signatureMatches) {
+                            if (hamzasMode && !isUsingVlc) switchToVlcDecoder(true)
+                            else if (!hamzasMode && isUsingVlc) playWithExo(path)
+                        } else {
+                            showSignatureMismatch()
+                        }
+                    } else {
+                        if (hamzasMode && !isUsingVlc) switchToVlcDecoder(false)
+                        else if (!hamzasMode && isUsingVlc) playWithExo(path)
+                    }
+                    if (signatureMismatchOverlay.visibility != View.VISIBLE && errorOverlay.visibility != View.VISIBLE) {
+                        showControls()
+                    }
+                }
+            }
+        }
+    }
+
     private fun startPreviewWorker() {
         lifecycleScope.launch(Dispatchers.IO) {
             for (pos in previewPositionChannel) {
@@ -202,13 +232,13 @@ class PlayerActivity : AppCompatActivity() {
                     val timeUs = pos * 1000
                     val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                         retriever.getScaledFrameAtTime(
-                            timeUs, 
-                            MediaMetadataRetriever.OPTION_CLOSEST, 
+                            timeUs,
+                            MediaMetadataRetriever.OPTION_CLOSEST,
                             320, 180
                         )
                     } else {
                         retriever.getFrameAtTime(
-                            timeUs, 
+                            timeUs,
                             MediaMetadataRetriever.OPTION_CLOSEST
                         )
                     }
@@ -251,7 +281,7 @@ class PlayerActivity : AppCompatActivity() {
                     }
                     if (state == Player.STATE_ENDED) { saveResumePosition(0); playNext() }
                 }
-                override fun onPlayerError(error: PlaybackException) { 
+                override fun onPlayerError(error: PlaybackException) {
                     val prefs = getSharedPreferences("SETTINGS", Context.MODE_PRIVATE)
                     if (!prefs.getBoolean("ALWAYS_VLC", false)) showHamzasModeRequired()
                 }
@@ -279,10 +309,17 @@ class PlayerActivity : AppCompatActivity() {
     private fun playCurrentVideo() {
         if (videoList.isEmpty()) return
         val path = videoList[position].path
-        
+
+        // Load fake duration from SECURE_DUR (Saved during encryption/ghosting)
+        val durPrefs = getSharedPreferences("SECURE_DUR", Context.MODE_PRIVATE)
+        fakeDuration = durPrefs.getLong(path, 0L)
+        if (fakeDuration == 0L && position < videoList.size) {
+            fakeDuration = videoList[position].duration
+        }
+
         checkSignatureJob?.cancel()
         controller?.stop(); vlcMediaPlayer?.stop()
-        
+
         errorOverlay.visibility = View.GONE
         signatureMismatchOverlay.visibility = View.GONE
         playerView.visibility = View.GONE
@@ -296,7 +333,7 @@ class PlayerActivity : AppCompatActivity() {
                 frameRetriever?.release()
                 val retriever = MediaMetadataRetriever()
                 val isEncrypted = VideoFile.isFileEncrypted(this@PlayerActivity, path)
-                
+
                 if (isEncrypted) {
                     val uri = Uri.parse("content://com.yourcompany.videoplayer.decryption$path")
                     contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
@@ -306,9 +343,9 @@ class PlayerActivity : AppCompatActivity() {
                     retriever.setDataSource(path)
                 }
                 frameRetriever = retriever
-            } catch (e: Exception) { 
+            } catch (e: Exception) {
                 e.printStackTrace()
-                frameRetriever = null 
+                frameRetriever = null
             }
         }
 
@@ -332,6 +369,7 @@ class PlayerActivity : AppCompatActivity() {
                         showSignatureMismatch()
                     }
                 } else {
+                    // For Ghosted files (0 duration header), VLC mode is recommended for better seeking
                     if (hamzasMode) switchToVlcDecoder(false) else playWithExo(path)
                 }
                 updateSuggestedList()
@@ -362,12 +400,12 @@ class PlayerActivity : AppCompatActivity() {
         if (!isUsingVlc) { controller?.stop(); isUsingVlc = true }
         playerView.visibility = View.GONE; vlcVideoLayout.visibility = View.VISIBLE; subtitleView.visibility = View.GONE
         val path = videoList[position].path; saveLastWatched()
-        
+
         if (libVLC == null) {
             val options = arrayListOf("-vvv", "--no-drop-late-frames", "--rtsp-tcp", "--file-caching=5000", "--network-caching=5000")
             libVLC = LibVLC(this, options)
         }
-        
+
         if (vlcMediaPlayer == null) vlcMediaPlayer = MediaPlayer(libVLC) else vlcMediaPlayer?.stop()
         vlcMediaPlayer?.detachViews(); vlcMediaPlayer?.attachViews(vlcVideoLayout, null, true, true)
 
@@ -385,7 +423,16 @@ class PlayerActivity : AppCompatActivity() {
         } catch (e: Exception) { showToast("VLC Error") }
 
         vlcMediaPlayer?.setEventListener { event -> runOnUiThread { when (event.type) {
-            MediaPlayer.Event.Playing -> { updatePlayPauseBtn(true); seekBar.max = vlcMediaPlayer?.length?.toInt() ?: 0; tvTotalDuration.text = formatTime(vlcMediaPlayer?.length ?: 0); updateHandler.post(updateProgressAction); val resumePos = getResumePosition(path); if (resumePos > 0) vlcMediaPlayer?.time = resumePos; resetTimer() }
+            MediaPlayer.Event.Playing -> {
+                updatePlayPauseBtn(true)
+                val dur = if (fakeDuration > 0) fakeDuration else vlcMediaPlayer?.length ?: 0L
+                seekBar.max = dur.toInt()
+                tvTotalDuration.text = formatTime(dur)
+                updateHandler.post(updateProgressAction)
+                val resumePos = getResumePosition(path)
+                if (resumePos > 0) vlcMediaPlayer?.time = resumePos
+                resetTimer()
+            }
             MediaPlayer.Event.Paused -> { updatePlayPauseBtn(false); resetTimer() }
             MediaPlayer.Event.EndReached -> { saveResumePosition(0); playNext() }
             MediaPlayer.Event.EncounteredError -> { if (isEncrypted) showSignatureMismatch() }
@@ -410,7 +457,7 @@ class PlayerActivity : AppCompatActivity() {
             override fun onDoubleTap(e: MotionEvent): Boolean {
                 if (isLocked || activeGesture != 0 || gestureCooldown) return false
                 val width = resources.displayMetrics.widthPixels
-                
+
                 val currentZone = if (e.x < width * 0.35) -1 else if (e.x > width * 0.65) 1 else 0
                 val firstZone = if (firstTapX < width * 0.35) -1 else if (firstTapX > width * 0.65) 1 else 0
                 if (currentZone != firstZone) return false
@@ -422,15 +469,15 @@ class PlayerActivity : AppCompatActivity() {
                 }
                 resetTimer(); return true
             }
-            override fun onLongPress(e: MotionEvent) { 
+            override fun onLongPress(e: MotionEvent) {
                 if (isLocked || activeGesture != 0 || controlsWrapper.visibility == View.VISIBLE) return
                 val isP = if(isUsingVlc) vlcMediaPlayer?.isPlaying == true else controller?.isPlaying == true
                 if (!isP) return
-                
+
                 activeGesture = 3
                 longPressStartY = e.y
                 currentSpeedIndex = 3 // Default 2.0x
-                
+
                 showSpeedSelectionCard(e.x, e.y)
                 updateSpeed(speedValues[currentSpeedIndex])
                 speedBoostText.visibility = View.VISIBLE
@@ -469,7 +516,7 @@ class PlayerActivity : AppCompatActivity() {
                     }
                 }
                 if (activeGesture == 1) {
-                    val dur = if(isUsingVlc) vlcMediaPlayer?.length ?: 0L else controller?.duration ?: 0L
+                    val dur = if(isUsingVlc) (if(fakeDuration > 0) fakeDuration else vlcMediaPlayer?.length ?: 0L) else (if(fakeDuration > 0) fakeDuration else controller?.duration ?: 0L)
                     if (dur <= 0) return false
                     tempScrubPos = (initialSeekPos + ((e2.x - gestureStartX) * (300000f / width)).toLong()).coerceIn(0L, dur)
                     seekBar.progress = tempScrubPos.toInt(); tvCurrentTime.text = formatTime(tempScrubPos)
@@ -494,7 +541,7 @@ class PlayerActivity : AppCompatActivity() {
                 lastTapTime = now
             }
             scaleGestureDetector.onTouchEvent(event); gestureDetector.onTouchEvent(event)
-            
+
             if (activeGesture == 3 && event.actionMasked == MotionEvent.ACTION_MOVE) {
                 val deltaY = longPressStartY - event.y
                 val step = 45
@@ -510,14 +557,14 @@ class PlayerActivity : AppCompatActivity() {
 
             if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
                 gestureContainer.visibility = View.GONE
-                if (activeGesture == 1) { 
+                if (activeGesture == 1) {
                     if (isUsingVlc) vlcMediaPlayer?.time = tempScrubPos else controller?.seekTo(tempScrubPos)
                     if (wasPlayingBeforeScroll) { if (isUsingVlc) vlcMediaPlayer?.play() else controller?.play() }
                     previewFrameContainer.visibility = View.GONE
-                    Handler(Looper.getMainLooper()).postDelayed({ isUserSeeking = false }, 500) 
-                    if (topBar.visibility == View.GONE) hideControls() 
+                    Handler(Looper.getMainLooper()).postDelayed({ isUserSeeking = false }, 500)
+                    if (topBar.visibility == View.GONE) hideControls()
                 }
-                else if (activeGesture == 3) { 
+                else if (activeGesture == 3) {
                     updateSpeed(1.0f)
                     speedBoostText.visibility = View.GONE
                     speedSelectionCard.visibility = View.GONE
@@ -543,11 +590,11 @@ class PlayerActivity : AppCompatActivity() {
             rewOverlay = findViewById(R.id.rew_overlay); ffwdOverlay = findViewById(R.id.ffwd_overlay)
             rvSuggested = findViewById(R.id.rv_suggested_videos); suggestedContainer = findViewById(R.id.suggested_container); centerControls = findViewById(R.id.center_controls)
             topBar = findViewById(R.id.top_bar_scroll); bottomBar = findViewById(R.id.bottom_controls_container); controlsBgOverlay = findViewById(R.id.controls_bg_overlay)
-            
+
             previewFrameContainer = findViewById(R.id.preview_frame_container)
             ivPreviewFrame = findViewById(R.id.iv_preview_frame)
             tvPreviewTime = findViewById(R.id.tv_preview_time)
-            
+
             speedSelectionCard = findViewById(R.id.speed_selection_card)
             speedIndicatorLeft = findViewById(R.id.speed_indicator_left)
             speedIndicatorRight = findViewById(R.id.speed_indicator_right)
@@ -561,7 +608,7 @@ class PlayerActivity : AppCompatActivity() {
 
             suggestedContainer.translationY = translationHiddenDp * resources.displayMetrics.density
             findViewById<Button>(R.id.btn_close_mismatch).setOnClickListener { finish() }
-            findViewById<Button>(R.id.btn_goto_settings).setOnClickListener { 
+            findViewById<Button>(R.id.btn_goto_settings).setOnClickListener {
                 startActivity(Intent(this, SettingsActivity::class.java))
             }
             playPauseBtn.setOnClickListener { togglePlayPause(); resetTimer() }
@@ -577,17 +624,17 @@ class PlayerActivity : AppCompatActivity() {
             lockBtn.setOnClickListener { isLocked = true; updateLockUI() }
             unlockBtnTop.setOnClickListener { isLocked = false; updateLockUI() }
             seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(s: SeekBar?, p: Int, fromUser: Boolean) { 
-                    if (fromUser) { 
+                override fun onProgressChanged(s: SeekBar?, p: Int, fromUser: Boolean) {
+                    if (fromUser) {
                         tvCurrentTime.text = formatTime(p.toLong())
                         updatePreviewFrame(p.toLong())
-                    } 
+                    }
                 }
                 override fun onStartTrackingTouch(s: SeekBar?) { isUserSeeking = true; hideHandler.removeCallbacks(hideRunnable) }
-                override fun onStopTrackingTouch(s: SeekBar?) { 
+                override fun onStopTrackingTouch(s: SeekBar?) {
                     if (isUsingVlc) vlcMediaPlayer?.time = seekBar.progress.toLong() else controller?.seekTo(seekBar.progress.toLong())
                     previewFrameContainer.visibility = View.GONE
-                    Handler(Looper.getMainLooper()).postDelayed({ isUserSeeking = false }, 1000); resetTimer() 
+                    Handler(Looper.getMainLooper()).postDelayed({ isUserSeeking = false }, 1000); resetTimer()
                 }
             })
             true
@@ -596,27 +643,27 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun showSpeedSelectionCard(touchX: Float, touchY: Float) {
         speedSelectionCard.visibility = View.VISIBLE
-        
+
         val screenWidth = resources.displayMetrics.widthPixels
         val screenHeight = resources.displayMetrics.heightPixels
         val cardWidth = speedSelectionCard.width.takeIf { it > 0 } ?: (100 * resources.displayMetrics.density).toInt()
         val cardHeight = speedSelectionCard.height.takeIf { it > 0 } ?: (180 * resources.displayMetrics.density).toInt()
-        
+
         var targetX = touchX + 60
         isCardOnRight = true
         if (targetX + cardWidth > screenWidth - 50) {
             targetX = touchX - cardWidth - 60
             isCardOnRight = false
         }
-        
+
         var targetY = touchY - (cardHeight / 2)
         targetY = targetY.coerceIn(50f, (screenHeight - cardHeight - 50).toFloat())
-        
+
         speedSelectionCard.x = targetX
         speedSelectionCard.y = targetY
         speedSelectionCard.alpha = 0f
         speedSelectionCard.animate().alpha(1f).setDuration(200).start()
-        
+
         highlightSpeedInCard(3)
     }
 
@@ -626,13 +673,13 @@ class PlayerActivity : AppCompatActivity() {
                 textView.setTextColor(Color.WHITE)
                 textView.textSize = 20f
                 textView.setTypeface(null, android.graphics.Typeface.BOLD)
-                
+
                 val indicator = if (isCardOnRight) speedIndicatorLeft else speedIndicatorRight
                 val otherIndicator = if (isCardOnRight) speedIndicatorRight else speedIndicatorLeft
-                
+
                 indicator.visibility = View.VISIBLE
                 otherIndicator.visibility = View.INVISIBLE
-                
+
                 textView.post {
                     val textCenterY = textView.y + (textView.height / 2f) - (indicator.height / 2f)
                     indicator.animate().y(textCenterY).setDuration(150).setInterpolator(DecelerateInterpolator()).start()
@@ -647,7 +694,13 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun updateSpeed(speed: Float) {
-        if (isUsingVlc) vlcMediaPlayer?.rate = speed else controller?.setPlaybackSpeed(speed)
+        if (isUsingVlc) {
+            vlcMediaPlayer?.rate = speed
+        } else {
+            controller?.let {
+                it.setPlaybackParameters(PlaybackParameters(speed))
+            }
+        }
     }
 
     private fun vibrate(ms: Long) {
@@ -663,18 +716,18 @@ class PlayerActivity : AppCompatActivity() {
         if (videoList.isEmpty()) return
         previewFrameContainer.visibility = View.VISIBLE
         tvPreviewTime.text = formatTime(pos)
-        
-        val dur = if(isUsingVlc) vlcMediaPlayer?.length ?: 0L else controller?.duration ?: 0L
+
+        val dur = if(isUsingVlc) (if(fakeDuration > 0) fakeDuration else vlcMediaPlayer?.length ?: 0L) else (if(fakeDuration > 0) fakeDuration else controller?.duration ?: 0L)
         if (dur <= 0) return
 
         val seekBarWidth = seekBar.width - seekBar.paddingStart - seekBar.paddingEnd
         val thumbX = seekBar.paddingStart + (seekBarWidth * (pos.toFloat() / dur))
-        
+
         val location = IntArray(2)
         seekBar.getLocationInWindow(location)
         val parentLocation = IntArray(2)
         (previewFrameContainer.parent as View).getLocationInWindow(parentLocation)
-        
+
         val targetX = location[0] + thumbX - parentLocation[0] - (previewFrameContainer.width / 2)
         previewFrameContainer.x = targetX.coerceIn(0f, (previewFrameContainer.parent as View).width.toFloat() - previewFrameContainer.width)
 
@@ -692,9 +745,9 @@ class PlayerActivity : AppCompatActivity() {
         if (!isListExpanded) return
         isListExpanded = false; val density = resources.displayMetrics.density
         suggestedContainer.animate().translationY(translationHiddenDp * density).setDuration(500).setInterpolator(DecelerateInterpolator()).start()
-        if (controlsWrapper.visibility == View.VISIBLE) { 
+        if (controlsWrapper.visibility == View.VISIBLE) {
             bottomBar.visibility = View.VISIBLE; topBar.visibility = View.VISIBLE; centerControls.visibility = View.VISIBLE; lockBtn.visibility = View.VISIBLE
-            bottomBar.animate().alpha(1f).translationY(0f).setDuration(300).start(); topBar.animate().alpha(1f).translationY(0f).setDuration(300).start() 
+            bottomBar.animate().alpha(1f).translationY(0f).setDuration(300).start(); topBar.animate().alpha(1f).translationY(0f).setDuration(300).start()
         }
         else { controlsBgOverlay.animate().alpha(0f).setDuration(300).withEndAction { controlsBgOverlay.visibility = View.GONE }.start() }
         applyBlur(false)
@@ -751,7 +804,7 @@ class PlayerActivity : AppCompatActivity() {
     private fun saveResumePosition(pos: Long) {
         if (videoList.isEmpty() || position >= videoList.size) return
         val path = videoList[position].path
-        val totalDur = if (isUsingVlc) vlcMediaPlayer?.length ?: 0L else controller?.duration ?: 0L
+        val totalDur = if (isUsingVlc) (if(fakeDuration > 0) fakeDuration else vlcMediaPlayer?.length ?: 0L) else (if(fakeDuration > 0) fakeDuration else controller?.duration ?: 0L)
         val finalPos = if (totalDur > 10000 && (pos >= totalDur - 5000 || pos >= totalDur * 0.98)) 0L else pos
         getSharedPreferences("RESUME_INFO", Context.MODE_PRIVATE).edit().putLong(path, finalPos).apply()
     }
@@ -795,18 +848,18 @@ class PlayerActivity : AppCompatActivity() {
             val encryptionMap = mutableMapOf<String, Boolean>()
             finalSuggested.forEach { video -> encryptionMap[video.path] = VideoFile.isFileEncrypted(this@PlayerActivity, video.path) }
             withContext(Dispatchers.Main) {
-                if (suggestedAdapter == null) { 
-                    suggestedAdapter = SuggestedVideoAdapter(finalSuggested, encryptionMap) { selectedVideo -> 
+                if (suggestedAdapter == null) {
+                    suggestedAdapter = SuggestedVideoAdapter(finalSuggested, encryptionMap) { selectedVideo ->
                         val actualPos = videoList.indexOf(selectedVideo)
-                        if (actualPos != -1) { 
+                        if (actualPos != -1) {
                             position = actualPos
                             videoTitleTop.text = videoList[position].title
                             if (isListExpanded) collapseList()
                             playCurrentVideo()
-                            resetTimer() 
-                        } 
-                    } 
-                    rvSuggested.adapter = suggestedAdapter 
+                            resetTimer()
+                        }
+                    }
+                    rvSuggested.adapter = suggestedAdapter
                 }
                 else {
                     suggestedAdapter?.updateData(finalSuggested, encryptionMap)
@@ -849,7 +902,7 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onStart() { super.onStart(); if (isUsingVlc) { vlcMediaPlayer?.detachViews(); vlcMediaPlayer?.attachViews(vlcVideoLayout, null, true, true) } }
     override fun onStop() { super.onStop(); if (isUsingVlc) vlcMediaPlayer?.detachViews() }
-    override fun onDestroy() { 
+    override fun onDestroy() {
         super.onDestroy()
         updateHandler.removeCallbacks(updateProgressAction)
         controllerFuture?.let { MediaController.releaseFuture(it) }

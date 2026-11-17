@@ -23,21 +23,20 @@ class PlaybackService : MediaSessionService() {
     override fun onCreate() {
         super.onCreate()
         
-        // 🔥 Optimization for HEVC 10-bit
+        // 🔥 Optimization for HEVC 10-bit & Compressed color formats
         val renderersFactory = DefaultRenderersFactory(this)
-        // Hardware ko priority dein (ON), PREFER extension ko hata kar
-        renderersFactory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
-        renderersFactory.setEnableDecoderFallback(true)
+            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
+            .setEnableDecoderFallback(true)
 
-        // Increase buffer for high bitrate HEVC files
+        // Increase buffer and configure LoadControl for smooth playback of high bitrate/compressed files
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(
-                50000,  // Min buffer
-                100000, // Max buffer
-                2500,   // Buffer for playback
-                5000    // Buffer after rebuffering
+                60000,  // Min buffer
+                120000, // Max buffer
+                3000,   // Buffer for playback
+                6000    // Buffer after rebuffering
             )
-            .setBackBuffer(10000, true)
+            .setBackBuffer(15000, true)
             .build()
 
         val audioAttributes = AudioAttributes.Builder()

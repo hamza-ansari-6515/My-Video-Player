@@ -48,6 +48,8 @@ class VideoRepository(val context: Context) {
             MediaStore.Video.Media.DATE_MODIFIED
         )
 
+        val durPrefs = context.getSharedPreferences("SECURE_DUR", Context.MODE_PRIVATE)
+
         for (uri in urisToQuery.distinct()) {
             try {
                 val cursor = context.contentResolver.query(uri, projection, null, null, null)
@@ -78,8 +80,13 @@ class VideoRepository(val context: Context) {
                         val fName = if (bucketIdx != -1) it.getString(bucketIdx) ?: "Unknown" else "Unknown"
                         var duration = it.getLong(durationIdx)
                         
-                        // 🔥 Fix: MediaStore provides 0 for some videos, try getting it manually
-                        if (duration <= 0) {
+                        // 🔥 Fix: Check for Ghost Mode or override duration
+                        val secureDur = durPrefs.getLong(stdPath, 0L)
+                        if (secureDur == -1L || stdPath.contains("/Ghost/", ignoreCase = true)) {
+                            duration = 0L
+                        } else if (secureDur > 0) {
+                            duration = secureDur
+                        } else if (duration <= 0) {
                             duration = getDurationManually(stdPath)
                         }
 
@@ -124,6 +131,7 @@ class VideoRepository(val context: Context) {
     private fun scanManualRecursive(dir: File, list: MutableList<VideoFile>, foundPaths: MutableSet<String>, depth: Int) {
         if (!dir.exists() || !dir.isDirectory || depth > 2) return 
         val videoExtensions = setOf("mp4", "mkv", "avi", "mov", "wmv", "flv", "webm", "3gp")
+        val durPrefs = context.getSharedPreferences("SECURE_DUR", Context.MODE_PRIVATE)
         try {
             dir.listFiles()?.forEach { file ->
                 val stdPath = standardizePath(file.absolutePath)
@@ -131,13 +139,23 @@ class VideoRepository(val context: Context) {
                     if (!file.name.startsWith(".")) scanManualRecursive(file, list, foundPaths, depth + 1)
                 } else if (file.isFile && videoExtensions.contains(file.extension.lowercase())) {
                     if (!foundPaths.contains(stdPath)) {
+                        var duration = 0L
+                        val secureDur = durPrefs.getLong(stdPath, 0L)
+                        if (secureDur == -1L || stdPath.contains("/Ghost/", ignoreCase = true)) {
+                            duration = 0L
+                        } else if (secureDur > 0) {
+                            duration = secureDur
+                        } else {
+                            duration = getDurationManually(stdPath)
+                        }
+
                         list.add(VideoFile(
                             id = file.hashCode().toLong(), 
                             path = stdPath, 
                             title = file.name, 
                             folderName = dir.name, 
                             size = file.length(), 
-                            duration = getDurationManually(stdPath), 
+                            duration = duration,
                             dateModified = file.lastModified() / 1000
                         ))
                         foundPaths.add(stdPath)

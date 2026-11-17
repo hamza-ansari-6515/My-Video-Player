@@ -25,7 +25,7 @@ data class VideoFile(
         private const val SCAN_LIMIT = 1024 * 1024 * 50L // 50MB Scan limit for marker
 
         fun formatDuration(durationMs: Long): String {
-            if (durationMs <= 0) return "--:--"
+            if (durationMs <= 0) return "00:00"
             val seconds = (durationMs / 1000) % 60
             val minutes = (durationMs / (1000 * 60)) % 60
             val hours = (durationMs / (1000 * 60 * 60))

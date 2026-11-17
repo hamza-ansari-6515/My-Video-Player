@@ -52,7 +52,6 @@ class UnifiedAdapter(
         val lastId = playPrefs.getLong("LAST_ID", -1L)
         val lastPath = playPrefs.getString("LAST_PATH", "") ?: ""
         val settingsPrefs = context.getSharedPreferences("SETTINGS", Context.MODE_PRIVATE)
-        val alwaysVlc = settingsPrefs.getBoolean("ALWAYS_VLC", false)
         val durPrefs = context.getSharedPreferences("SECURE_DUR", Context.MODE_PRIVATE)
         val currentSig = settingsPrefs.getString("SECURITY_SIGNATURE", "HAMZA") ?: "HAMZA"
 
@@ -84,7 +83,10 @@ class UnifiedAdapter(
             val isEnc = encryptionCache[item.path]
             val savedDur = durPrefs.getLong(item.path, 0L)
             
-            if (savedDur > 0) {
+            // Fix: Handle ghosted marker (-1L) correctly
+            if (savedDur == -1L) {
+                item.duration = 0L
+            } else if (savedDur > 0L) {
                 item.duration = savedDur
             }
             holder.videoDuration.text = item.formattedDuration
@@ -104,7 +106,7 @@ class UnifiedAdapter(
                 val encrypted = isEnc ?: withContext(Dispatchers.IO) { VideoFile.isFileEncrypted(context, item.path) }
                 encryptionCache[item.path] = encrypted
                 
-                if (encrypted && savedDur <= 0L) {
+                if (encrypted && savedDur <= 0L && savedDur != -1L) {
                     val realDur = withContext(Dispatchers.IO) { getRealDuration(item.path) }
                     if (realDur > 0) {
                         durPrefs.edit().putLong(item.path, realDur).apply()
@@ -122,6 +124,11 @@ class UnifiedAdapter(
             }
 
             holder.itemView.setOnClickListener {
+                val pauseMusicIntent = Intent(context, DualMusicService::class.java).apply {
+                    action = "PAUSE_ALL"
+                }
+                context.startService(pauseMusicIntent)
+
                 playPrefs.edit().putLong("LAST_ID", item.id).putString("LAST_PATH", item.path).apply()
                 val videoItems = items.filterIsInstance<VideoFile>()
                 context.startActivity(Intent(context, PlayerActivity::class.java).apply {
@@ -147,7 +154,6 @@ class UnifiedAdapter(
     }
 
     private fun loadThumbnail(holder: VideoViewHolder, item: VideoFile, isEncrypted: Boolean, signature: String) {
-        // 🔥 Fix: Use File source instead of MediaStore ID for more reliable thumbnails on manual scans
         val thumbSource: Any = if (isEncrypted) {
             Uri.parse("content://com.yourcompany.videoplayer.decryption${item.path}")
         } else {
