@@ -1,4 +1,4 @@
-# 📱 My Video Player
+# 📱 Video Player
 **One App. Unlimited Entertainment.**
 
 Experience a powerful all-in-one video and music player powered by the VLC Engine. Enjoy smooth playback, advanced audio controls, unique video tools, and a clean modern interface — completely free and offline.
@@ -53,4 +53,4 @@ For feedback, collaboration or suggestions, feel free to get in touch!
 
 ## ⬇️ Download Latest APK
 
-[📥 Instant Download APK](https://drive.google.com/file/d/143BEO6dlAhw5X0gKfPbNziRAxrQQC_71/view?usp=drivesdk)
+[📥 Instant Download APK](https://drive.google.com/file/d/1FU0OCawn7m15fvNVaBcudvrjeZNP6nU0/view?usp=drivesdk)
